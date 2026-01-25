@@ -1,0 +1,153 @@
+@import 'material-icons/iconfont/material-icons.css';
+
+/*
+@media (prefers-color-scheme: light) {
+  :root {
+    color: #213547;
+    background-color: #ffffff;
+  }
+  a:hover {
+    color: #747bff;
+  }
+  button {
+    background-color: #f9f9f9;
+  }
+} */
+
+// Color variables
+$color-text: #213547;
+$bg-light: #ffffff;
+$bg: #d8e1e1;
+$header-bg: #345a71;
+$header-color: #fff;
+$link-hover: #747bff;
+$btn-bg: #6366f1;
+$btn-bg-2: #10b981;
+$btn-hover-border: #646cff;
+$select-active-bg: #00a4c9;
+$blk-bg: #e9ff92;
+$scores-bg: #959bff;
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  scrollbar-gutter: stable;
+  overflow-y: scroll;
+}
+
+body {
+  background-color: $bg;
+  margin: 0;
+}
+
+header.site-header {
+  background: $header-bg;
+  color: $header-color;
+  padding: 10px 0;
+  margin-bottom: 20px;
+}
+
+button,
+select {
+  cursor: pointer;
+}
+
+button {
+  border: 1px solid transparent;
+  padding: 0.6em 1.2em;
+  font-size: 1em;
+  font-weight: 500;
+  font-family: inherit;
+  background-color: $btn-bg;
+  transition: border-color 0.25s;
+}
+
+select {
+  &:active,
+  &:focus,
+  &:hover {
+    cursor: pointer;
+  }
+}
+
+.none {
+  display: none;
+}
+
+select,
+textarea {
+  background: none;
+  border: 1px solid black;
+  padding: 10px 20px;
+  font-size: .9rem;
+  outline: none;
+}
+
+.container-free {
+  max-width: 1200px;
+  margin: 0 auto;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.site-title {
+  text-transform: uppercase;
+  font-size: 16px;
+  font-weight: normal;
+  text-align: left;
+  margin: 0;
+}
+
+.logo {
+  height: 6em;
+  display: inline;
+  padding: 1em;
+}
+
+.rand {
+  padding: 2px 10px 2em 16px;
+}
+
+.blk {
+  padding: 10px 100px;
+  font-size: 20pt;
+  text-align: center;
+  background-color: $blk-bg;
+  border-top: 1px solid black;
+  border-bottom: 1px solid black;
+}
+
+.remove-button {
+  padding: 0;
+  position: absolute;
+  font-size: 110%;
+  top: 150px;
+  color: darkred;
+  right: 30px;
+  display: inline;
+  width: 24px;
+  height: 24px;
+  border: none;
+  background: transparent;
+}
+
+.scores {
+  display: inline-block;
+  margin: 0 0 10px 50px;
+  padding: 10px;
+  background-color: $scores-bg;
+  font-size: 20px;
+
+  b {
+    font-size: 24px;
+  }
+}
+
+.temp-bible-place {
+  position: absolute;
+  left: 30px;
+  margin-right: 25px;
+}
