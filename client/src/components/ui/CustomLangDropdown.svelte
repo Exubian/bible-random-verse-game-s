@@ -1,21 +1,10 @@
 <script>
-  import { settings, languages, setLanguage } from '../../store/settings.js';
+  import { settings, languages, setLanguage } from '../../store/settings.svelte';
 
-  /**
-   * CustomDropdown component connected directly to the settings store.
-   * Handles language selection with hover and click logic.
-   */
   let isOpen = $state(false);
-  let currentSettings = $state({ language: 'rus' });
 
-  // Subscribe to settings store to keep internal state in sync
-  settings.subscribe(value => {
-    currentSettings = value;
-  });
-
-  // Derived state to find the current language object for display
   let selected = $derived(
-    languages.find(l => l.value === currentSettings.language) || languages[1]
+    languages.find(l => l.value === settings.language) || languages[1]
   );
 
   function handleMouseEnter() {

@@ -1,10 +1,6 @@
 <script>
   import CustomDropdown from './CustomLangDropdown.svelte';
 
-  /**
-   * Header component.
-   * Logic for language selection is encapsulated within the CustomDropdown component.
-   */
 </script>
 
 <header class="site-header">

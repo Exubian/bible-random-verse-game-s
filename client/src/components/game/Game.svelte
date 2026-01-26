@@ -1,4 +1,5 @@
 <script>
+  import { getContext } from 'svelte';
   import { methods } from '../../utils/mixin.js';
   import VerseCard from './verse/VerseCard.svelte';
 
@@ -7,9 +8,9 @@
   let isVerseVisible = $state(false);
   let isLoading = $state(false);
 
-  /**
-   * Fetches a random verse from the server.
-   */
+  const lxContext = getContext('lx');
+  const lx = $derived(lxContext.current);
+
   async function fetchRandomVerse() {
     isLoading = true;
     try {
@@ -36,9 +37,9 @@
 <div class="game-wrapper">
   <div class="game-card">
     <header class="game-header">
-      <h2 class="title">Угадай библейский стих</h2>
+      <h2 class="title">{lx.guess_bible_verse}</h2>
       <div class="stats-badge">
-        <span class="label">Твои очки:</span>
+        <span class="label">{lx.your_score}</span>
         <span class="value">0</span>
       </div>
     </header>
@@ -48,7 +49,7 @@
         class="icon-button refresh-btn"
         onclick={fetchRandomVerse}
         disabled={isLoading}
-        title="Обновить стих"
+        title={`${lx.refresh} ${lx.verse}`}
       >
         <i class="material-icons {isLoading ? 'spinning' : ''}">
           refresh
@@ -62,7 +63,8 @@
         <i class="material-icons">
           {isVerseVisible ? 'visibility_off' : 'visibility'}
         </i>
-        {isVerseVisible ? 'Скрыть стих' : 'Показать стих'}
+        {isVerseVisible ? `${lx.hide}` : `${lx.show}`}
+        {lx.verse}
       </button>
     </div>
 
@@ -82,7 +84,9 @@
       {:else}
         <div class="empty-state">
           <i class="material-icons">menu_book</i>
-          <p>Стих скрыт. Нажмите кнопку выше, чтобы увидеть текст.</p>
+          <p>
+            {lx.here_will_be} {lx.verse}
+          </p>
         </div>
       {/if}
     </div>
@@ -95,14 +99,15 @@
             list="choiceBP"
             type="text"
             id="partInput"
-            placeholder="Начните вводить название..."
+            placeholder={lx.start_typing}
           />
           <datalist id="choiceBP"></datalist>
         </div>
       </div>
 
       <button id="check" class="check-button">
-        Проверить ответ
+        {lx.check}
+        {lx.answer}
       </button>
     </footer>
   </div>
@@ -147,11 +152,7 @@
           font-size: 24px;
           font-weight: 800;
           margin: 0;
-          background: linear-gradient(
-            135deg,
-            #6366f1 0%,
-            #a855f7 100%
-          );
+          background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
           -webkit-background-clip: text;
           -webkit-text-fill-color: transparent;
         }
@@ -164,13 +165,22 @@
           gap: 8px;
           font-weight: 600;
 
-          .label { color: #6366f1; font-size: 14px; }
-          .value { color: #1e1b4b; }
+          .label {
+            color: #6366f1;
+            font-size: 14px;
+          }
+          .value {
+            color: #1e1b4b;
+          }
 
           @media (prefers-color-scheme: dark) {
             background: #3730a3;
-            .label { color: #c7d2fe; }
-            .value { color: #fff; }
+            .label {
+              color: #c7d2fe;
+            }
+            .value {
+              color: #fff;
+            }
           }
         }
       }
@@ -281,18 +291,23 @@
             position: relative;
             overflow: hidden;
             &::after {
-              content: "";
+              content: '';
               position: absolute;
-              top: 0; left: 0; width: 100%; height: 100%;
+              top: 0;
+              left: 0;
+              width: 100%;
+              height: 100%;
               background: linear-gradient(
                 90deg,
                 transparent,
-                rgba(255,255,255,0.5),
+                rgba(255, 255, 255, 0.5),
                 transparent
               );
               animation: shiver 1.5s infinite;
             }
-            &.short { width: 60%; }
+            &.short {
+              width: 60%;
+            }
             @media (prefers-color-scheme: dark) {
               background: #333;
             }
@@ -379,23 +394,32 @@
         }
       }
 
-      @keyframes spin { from {
-        transform: rotate(0deg);
-      } to {
-        transform: rotate(360deg);
-      } }
-      @keyframes fadeIn { from {
-        opacity: 0;
-        transform: translateY(10px);
-      } to {
-        opacity: 1;
-        transform: translateY(0);
-      } }
-      @keyframes shiver { from {
-        transform: translateX(-100%);
-      } to {
-        transform: translateX(100%);
-      } }
+      @keyframes spin {
+        from {
+          transform: rotate(0deg);
+        }
+        to {
+          transform: rotate(360deg);
+        }
+      }
+      @keyframes fadeIn {
+        from {
+          opacity: 0;
+          transform: translateY(10px);
+        }
+        to {
+          opacity: 1;
+          transform: translateY(0);
+        }
+      }
+      @keyframes shiver {
+        from {
+          transform: translateX(-100%);
+        }
+        to {
+          transform: translateX(100%);
+        }
+      }
     }
   }
 </style>
