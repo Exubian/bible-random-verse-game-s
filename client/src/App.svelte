@@ -5,7 +5,7 @@
   import { lx } from './store/lx.svelte';
   import { setLanguage } from './store/settings.svelte';
 
-  function initLang() {
+  function initLang(): void {
     if (['ru', 'en'].includes(localStorage.language)) setLanguage(localStorage.language);
   }
 
