@@ -1,7 +1,7 @@
 const { plainStructure, maxChapters } = require('../../client/src/constants/bible_structure_expected.mjs');
 const bible_rus = require('../assets/bible_data/RUSSIAN-KOI8R.json');
 const bible_eng = require('../assets/bible_data/kjv.json');
-const bookNameMap = require('../assets/maps/book_name_alphabet_mapping.json');
+const bookNameMap = require('../assets/maps/book_name_mapping.json');
 const { default:partNameMap } = require('../assets/maps/part_name_mapping.mjs');
 
 class GameService {
