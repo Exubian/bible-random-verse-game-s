@@ -12,7 +12,26 @@ async function mainRoutes(fastify, opts) {
     handler: MainController.getBible
   });
   fastify.get('/verse', {
-    handler: MainController.getRandomVerse
+    handler: MainController.getRandomVerse,
+    schema: {
+      querystring: {
+        type: 'object',
+        properties: {
+          bibleName: { type: 'string', default: 'RUS_SYNODAL' }
+        }
+      }
+    },
+  });
+  fastify.get('/book-mapping', {
+    handler: MainController.getBookMapping,
+    schema: {
+      querystring: {
+        type: 'object',
+        properties: {
+          bibleName: { type: 'string', default: 'RUS_SYNODAL' }
+        }
+      }
+    },
   });
 }
 module.exports = mainRoutes;

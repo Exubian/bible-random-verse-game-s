@@ -1,12 +1,14 @@
 const { plainStructure, maxChapters } = require('../../client/src/constants/bible_structure_expected.mjs');
-const bible = require('../assets/bible_data/RUSSIAN-KOI8R.json');
+const bible_rus = require('../assets/bible_data/RUSSIAN-KOI8R.json');
+const bible_eng = require('../assets/bible_data/kjv.json');
 const bookNameMap = require('../assets/maps/book_name_alphabet_mapping.json');
+const { default:partNameMap } = require('../assets/maps/part_name_mapping.mjs');
 
 class GameService {
   constructor() {
   }
 
-  getRandomVerse({ max, min }={}) {
+  getRandomVerse({ max, min, bibleName='RUS_SYNODAL' }={}) {
     try {
       if (max > maxChapters) max = maxChapters;
       if (min < 1) min = 1;
@@ -17,24 +19,48 @@ class GameService {
       const randomChapterNum = Math.floor(
         (Math.random() * (max+1 - min)) + min
       );
-      const { book, chapter } = this.findBookAndChapter(
+      const { part, book, chapter } = this.findBookAndChapter(
         randomChapterNum,
-        'RUS_SYNODAL'
+        bibleName
       );
+      let bible;
+      if (bibleName == 'en') bible = bible_eng;
+      else bible = bible_rus;
       const randomChapter = bible[book][chapter];
+      const versesCount = Object.keys(randomChapter).length;
       const randomVerseNum = Math.floor(
-        (Math.random() * (Object.keys(randomChapter).length+1 - 1)) + 1
+        (Math.random() * (versesCount+1 - 1)) + 1
       );
       const verse = bible[book][chapter][randomVerseNum];
-      return {book, chapter, verseNum: randomVerseNum, verse}
+      return {
+        part,
+        book,
+        chapter,
+        verse,
+        verseNum: randomVerseNum,
+        versesCount
+      }
     } catch (err) {
       console.error('Error getting random verse:', err);
+      throw err;
+    }
+  }
+
+  getBookMapping(bibleName = 'RUS_SYNODAL') {
+    try {
+      return {
+        bookMapping: bookNameMap[bibleName],
+        partMapping: partNameMap
+      };
+    } catch (err) {
+      console.error('Error getting book mapping:', err);
       throw err;
     }
   }
   
   findBookAndChapter(chapter, bibleName = 'en') {
     let count = 0;
+    let part = chapter > 929 ? 'christian greek' : 'hebrew-aramic';
     for (let i = 0; i < plainStructure.length; i++) {
       const book = plainStructure[i];
       count += book.chapters;
@@ -49,7 +75,11 @@ class GameService {
             ? plainStructure[i-1].name
             : bookNameMap[bibleName][plainStructure[i-1].name];
         }
-        return { book: bookName, chapter: chapterNum };
+        return {
+          part,
+          book: bookName,
+          chapter: chapterNum
+        };
       }
     }
     return null;
