@@ -1,25 +1,84 @@
 <script>
+  import VerseCard from './verse/VerseCard.svelte';
+  import SelectMultiple from '../ui/SelectMultiple.svelte';
+  import Icon from '../ui/Icon.svelte';
+  
   import { getContext } from 'svelte';
   import { methods } from '../../utils/mixin.js';
-  import VerseCard from './verse/VerseCard.svelte';
+  import {
+    default as bibleStructure,
+    plainStructure,
+  } from '../../constants/bible_structure_expected.mjs';
+  import {
+    progress,
+    setParts,
+    checkAnswer,
+    currentLevel,
+    getBookName,
+    resetProgress,
+  } from '../../store/progress.svelte';
+  import { settings } from '../../store/settings.svelte';
 
   /** @type { any | object } */
   let currentVerse = $state(null);
-  let isVerseVisible = $state(false);
+  let isVerseVisible = $state(true);
   let isLoading = $state(false);
+  let isRestartGame = $state(false);
+  let selectedPart = $state(null);
 
   const lxContext = getContext('lx');
-  const lx = $derived(lxContext.current);
 
+  const lx = $derived(lxContext.current);
+  const partsList = $derived.by(() => {
+    let parts = Object.keys(bibleStructure)
+    if (progress.step === 0) {
+      return settings.language === 'en' ? parts : Object.keys(progress.partMapping)
+    } else if (progress.step === 1) {
+      return settings.language === 'en'
+        ? bibleStructure[currentVerse.part].map((item) => item.name)
+        : Object.values(progress.bookMapping)
+    } else if (progress.step === 2) {
+      let bookName = getBookName(currentVerse.book, false);
+      let chaptersCount = bibleStructure[currentVerse.part].find(
+        (item) => item.name === bookName
+      ).chapters
+      return Array.from({ length: chaptersCount }, (_, i) => i + 1)
+    } else if (progress.step === 3) {
+      return Array.from({ length: currentVerse.versesCount }, (_, i) => i + 1)
+    }
+  })
+  
   async function fetchRandomVerse() {
-    isLoading = true;
     try {
-      const response = await methods.fetch('/verse').get();
+      isLoading = true;
+      const response = await methods.fetch(
+        '/verse?bibleName='+ (settings.language === 'en' ? 'en' : 'RUS_SYNODAL')/* ,
+        {
+          params: {
+            bibleName: settings.language === 'en' ? 'en' : 'RUS_SYNODAL'
+          }
+        } */
+      ).get();
       if (response?.verse) {
-        currentVerse = response;
+        currentVerse = setParts(response);
       }
     } catch (error) {
       console.error('Error fetching random verse:', error);
+    } finally {
+      isLoading = false;
+    }
+  }
+  async function fetchBookMapping() {
+    try {
+      if (settings.language === 'en') return;
+      isLoading = true;
+      const response = await methods.fetch('/book-mapping?bibleName=RUS_SYNODAL').get();
+      if (Object.keys(response).length > 0) {
+        progress.bookMapping = response.bookMapping;
+        progress.partMapping = response.partMapping;
+      }
+    } catch (error) {
+      console.error('Error fetching book mapping:', error);
     } finally {
       isLoading = false;
     }
@@ -29,8 +88,26 @@
     isVerseVisible = !isVerseVisible;
   }
 
-  $effect(() => {
-    fetchRandomVerse();
+  function checkAnswerLocal() {
+    checkAnswer(selectedPart);
+    if (![null, 4].includes(progress.step)) {
+      selectedPart = null;
+    } else {
+      setTimeout(() => {
+        isRestartGame = true;
+      }, 1000);
+    }
+  }
+
+  function restartGame() {
+    resetProgress();
+    selectedPart = null;
+    isRestartGame = false;
+  }
+
+  $effect(async() => {
+    await fetchRandomVerse();
+    await fetchBookMapping();
   });
 </script>
 
@@ -38,9 +115,13 @@
   <div class="game-card">
     <header class="game-header">
       <h2 class="title">{lx.guess_bible_verse}</h2>
-      <div class="stats-badge">
-        <span class="label">{lx.your_score}</span>
-        <span class="value">0</span>
+      <div
+        class="stats-badge"
+        class:failed={progress.step === null}
+        class:success={progress.step === 4}
+      >
+        <span class="label">{lx.your_score}:</span>
+        <span class="value">{progress.score}</span>
       </div>
     </header>
 
@@ -93,27 +174,66 @@
 
     <footer class="game-footer">
       <div class="input-group">
-        <label for="partInput">Какая это книга?</label>
+        <label
+          for="partInput"
+          class:failed={progress.step === null}
+          class:success={progress.step === 4}
+        >
+          {#if currentLevel()}
+            {progress.step === 3 ? lx.which_one : lx.which}
+            {lx?.[currentLevel()]}?
+          {:else}
+            {lx.game_over}
+          {/if}
+        </label>
         <div class="input-wrapper">
-          <input
-            list="choiceBP"
-            type="text"
-            id="partInput"
-            placeholder={lx.start_typing}
+          {#if currentLevel()}
+          <SelectMultiple
+            title={lx.start_typing}
+            array={partsList}
+            value={selectedPart}
+            isMultiple={false}
+            closeOnSelect={true}
+            setValue={(val) => selectedPart = val}
+            heightLimit="250px"
+            itemBackground="transparent"
           />
-          <datalist id="choiceBP"></datalist>
+          {:else if currentLevel() === null}
+            <div>
+              <span class="selected-part">{selectedPart}</span>
+            </div>
+          {/if}
         </div>
       </div>
 
-      <button id="check" class="check-button">
-        {lx.check}
-        {lx.answer}
-      </button>
+      {#if isRestartGame && currentLevel() === null}
+        <button
+          class="check-button"
+          class:failed={progress.step === null}
+          class:success={progress.step === 4}
+          onclick={restartGame}
+        >
+          {progress.step === null ? lx.try : lx.start} {lx.again}
+          <Icon name="refresh"/>
+        </button>
+      {:else}
+        <button
+          id="check"
+          class="check-button"
+          class:failed={progress.step === null}
+          class:success={progress.step === 4}
+          onclick={checkAnswerLocal}
+          disabled={!selectedPart || progress.step === null}
+        >
+          {lx.check} {lx.answer}
+        </button>
+      {/if}
     </footer>
   </div>
 </div>
 
 <style lang="scss">
+  @use 'sass:color';
   .game-wrapper {
     display: flex;
     justify-content: center;
@@ -130,7 +250,6 @@
       max-width: 600px;
       border-radius: 24px;
       box-shadow: 0 15px 35px rgba(0, 0, 0, 0.1);
-      overflow: hidden;
       padding: 32px;
       border: 1px solid rgba(0, 0, 0, 0.05);
       transition: transform 0.3s ease;
@@ -154,6 +273,7 @@
           margin: 0;
           background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);
           -webkit-background-clip: text;
+          background-clip: text;
           -webkit-text-fill-color: transparent;
         }
 
@@ -165,14 +285,6 @@
           gap: 8px;
           font-weight: 600;
 
-          .label {
-            color: #6366f1;
-            font-size: 14px;
-          }
-          .value {
-            color: #1e1b4b;
-          }
-
           @media (prefers-color-scheme: dark) {
             background: #3730a3;
             .label {
@@ -182,6 +294,27 @@
               color: #fff;
             }
           }
+          &.failed {
+            background: #ff4c4c;
+            .label {
+              color: #fff;
+            }
+          }
+          &.success {
+            background: #4ade80;
+            .label {
+              color: #fff;
+            }
+          }
+
+          .label {
+            color: #6366f1;
+            font-size: 14px;
+          }
+          .value {
+            color: #1e1b4b;
+          }
+
         }
       }
 
@@ -283,6 +416,7 @@
         .loader-placeholder {
           width: 100%;
           padding: 32px;
+
           .skeleton-line {
             height: 12px;
             background: #eee;
@@ -340,58 +474,69 @@
           display: flex;
           flex-direction: column;
           text-align: left;
+
           label {
             display: block;
             font-size: 13.6px;
             font-weight: 600;
             margin-bottom: 8px;
-            color: #6b7280;
+            &.failed {
+              color: color.adjust(#ff4c4c, $lightness: -15%);
+            }
+            &.success {
+              color: color.adjust(#4ade80, $lightness: -15%);
+            }
           }
 
           .input-wrapper {
             position: relative;
-            input {
-              width: 100%;
-              padding: 12.8px 16px;
+            .selected-part {
+              background: steelblue;
+              color: white;
+              padding: 3px 8px 5px;
               border-radius: 12px;
-              border: 2px solid #e5e7eb;
-              background: white;
-              font-size: 16px;
-              transition: border-color 0.2s;
-
-              &:focus {
-                outline: none;
-                border-color: #6366f1;
-              }
-
-              @media (prefers-color-scheme: dark) {
-                background: #333;
-                border-color: #444;
-                color: white;
-              }
             }
           }
         }
 
         .check-button {
+          display: flex;
+          justify-content: center;
           padding: 16px;
           border-radius: 14px;
           border: none;
-          background: #10b981;
+          background: #6366f1;
           color: white;
           font-weight: 700;
-          font-size: 16px;
           cursor: pointer;
           transition: all 0.2s;
 
           &:hover {
-            background: #059669;
+            background: #4f46e5;
             transform: translateY(-2px);
           }
           &:active {
             transform: translateY(0);
           }
+          &:disabled {
+            transform: none;
+            opacity: 0.5;
+            cursor: not-allowed;
+          }
+          &.failed {
+            background: #ff4c4c;
+          }
+          &.success {
+            background: #4ade80; //#10b981;
+            &:hover {
+              background: #10b981; //#059669;
+            }
+          }
         }
+      }
+
+      button {
+        font-size: 18px;
       }
 
       @keyframes spin {

@@ -1,4 +1,8 @@
 {
+  "bible_quiz": {
+    "ru": "Библейская викторина",
+    "en": "Bible quiz"
+  },
   "guess_bible_verse": {
     "ru": "Угадай библейский стих",
     "en": "Guess the Bible verse"
@@ -7,9 +11,33 @@
     "ru": "Твои очки",
     "en": "Your score"
   },
-  "try_again": {
-    "ru": "Попробовать снова",
-    "en": "Try again"
+  "game_over": {
+    "ru": "Игра окончена",
+    "en": "Game over"
+  },
+  "start": {
+    "ru": "Начать",
+    "en": "Start"
+  },
+  "try": {
+    "ru": "Попробовать",
+    "en": "Try"
+  },
+  "again": {
+    "ru": "снова",
+    "en": "again"
+  },
+  "bible": {
+    "ru": "Библия",
+    "en": "Bible"
+  },
+  "game": {
+    "ru": "Игра",
+    "en": "Game"
+  },
+  "part": {
+    "ru": "часть",
+    "en": "part"
   },
   "book": {
     "ru": "книга",
@@ -62,5 +90,13 @@
   "here_will_be": {
     "ru": "Здесь будет",
     "en": "Here will be"
+  },
+  "which": {
+    "ru": "Какая",
+    "en": "Which"
+  },
+  "which_one": {
+    "ru": "Какой",
+    "en": "Which one"
   }
 }

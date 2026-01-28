@@ -1,5 +1,10 @@
 <script>
   import CustomDropdown from './CustomLangDropdown.svelte';
+  import { getContext } from 'svelte';
+
+  const lxContext = getContext('lx');
+
+  const lx = $derived(lxContext.current);
 
 </script>
 
@@ -7,13 +12,13 @@
   <div class="header-container">
     <nav class="nav-section">
       <div class="links">
-        <a href="/viewer" class="nav-link">Bible</a>
-        <a href="/" class="nav-link active">Game</a>
+        <a href="/viewer" class="nav-link">{lx.bible}</a>
+        <a href="/" class="nav-link active">{lx.game}</a>
       </div>
     </nav>
 
     <div class="title-section">
-      <h1 class="site-title">Библейская викторина</h1>
+      <h1 class="site-title">{lx.bible_quiz}</h1>
     </div>
 
     <div class="action-section">

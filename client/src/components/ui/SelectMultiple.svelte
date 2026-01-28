@@ -253,10 +253,9 @@
       class:active={selectedIds?.length}
     >
       {#if !isOpen}
-        <span id="partInput" class="title-text">{title}</span>
+        <span class="title-text">{title}</span>
       {:else}
         <input
-          id="partInput"
           bind:this={searchInput}
           type="text"
           placeholder="{title}"
@@ -299,12 +298,12 @@
             tabindex="0"
           >
             <span>{getItemDisplay(val)}</span>
+            <!-- svelte-ignore a11y_interactive_supports_focus -->
             <div
               class="value-icon-wrapper"
               onclick={(e) => { e.stopPropagation(); toggleValue(val); }}
               onkeydown={(e) => e.key === 'Enter' && toggleValue(val)}
               role="button"
-              tabindex="0"
             >
               <Icon
                 name={selectedIds.includes(val) ? iconSelected : iconUnselected}
@@ -335,8 +334,7 @@
               class="selected-value"
               onclick={() => !disabled && toggleValue(val)}
               onkeydown={(e: KeyboardEvent) => e.key === 'Enter' && toggleValue(val)}
-              role="option"
-              aria-selected={selectedIds.includes(val)}
+              role="button"
               tabindex="0"
            >
              {getItemDisplay(val
