@@ -11,18 +11,11 @@
   } from '../../constants/bible_structure_expected.mjs';
   import {
     progress,
-    setParts,
-    checkAnswer,
-    currentLevel,
-    getBookName,
-    resetProgress,
   } from '../../store/progress.svelte';
   import { settings } from '../../store/settings.svelte';
 
   /** @type { any | object } */
-  let currentVerse = $state(null);
   let isVerseVisible = $state(true);
-  let isLoading = $state(false);
   let isRestartGame = $state(false);
   let selectedPart = $state(null);
 
@@ -35,61 +28,26 @@
       return settings.language === 'en' ? parts : Object.keys(progress.partMapping)
     } else if (progress.step === 1) {
       return settings.language === 'en'
-        ? bibleStructure[currentVerse.part].map((item) => item.name)
+        ? bibleStructure[progress.currentVerse.part].map((item) => item.name)
         : Object.values(progress.bookMapping)
     } else if (progress.step === 2) {
-      let bookName = getBookName(currentVerse.book, false);
-      let chaptersCount = bibleStructure[currentVerse.part].find(
+      let bookName = progress.getBookName(progress.currentVerse.book, false);
+      let chaptersCount = bibleStructure[progress.currentVerse.part].find(
         (item) => item.name === bookName
       ).chapters
       return Array.from({ length: chaptersCount }, (_, i) => i + 1)
     } else if (progress.step === 3) {
-      return Array.from({ length: currentVerse.versesCount }, (_, i) => i + 1)
+      return Array.from({ length: progress.currentVerse.versesCount }, (_, i) => i + 1)
     }
   })
   
-  async function fetchRandomVerse() {
-    try {
-      isLoading = true;
-      const response = await methods.fetch(
-        '/verse?bibleName='+ (settings.language === 'en' ? 'en' : 'RUS_SYNODAL')/* ,
-        {
-          params: {
-            bibleName: settings.language === 'en' ? 'en' : 'RUS_SYNODAL'
-          }
-        } */
-      ).get();
-      if (response?.verse) {
-        currentVerse = setParts(response);
-      }
-    } catch (error) {
-      console.error('Error fetching random verse:', error);
-    } finally {
-      isLoading = false;
-    }
-  }
-  async function fetchBookMapping() {
-    try {
-      if (settings.language === 'en') return;
-      isLoading = true;
-      const response = await methods.fetch('/book-mapping?bibleName=RUS_SYNODAL').get();
-      if (Object.keys(response).length > 0) {
-        progress.bookMapping = response.bookMapping;
-        progress.partMapping = response.partMapping;
-      }
-    } catch (error) {
-      console.error('Error fetching book mapping:', error);
-    } finally {
-      isLoading = false;
-    }
-  }
 
   function handleToggleVisibility() {
     isVerseVisible = !isVerseVisible;
   }
 
   function checkAnswerLocal() {
-    checkAnswer(selectedPart);
+    progress.checkAnswer(selectedPart);
     if (![null, 4].includes(progress.step)) {
       selectedPart = null;
     } else {
@@ -100,14 +58,14 @@
   }
 
   function restartGame() {
-    resetProgress();
+    progress.resetProgress();
     selectedPart = null;
     isRestartGame = false;
   }
 
   $effect(async() => {
-    await fetchRandomVerse();
-    await fetchBookMapping();
+    await progress.fetchRandomVerse();
+    await progress.fetchBookMapping();
   });
 </script>
 
@@ -128,11 +86,11 @@
     <div class="action-bar">
       <button
         class="icon-button refresh-btn"
-        onclick={fetchRandomVerse}
-        disabled={isLoading}
+        onclick={() => progress.fetchRandomVerse()}
+        disabled={progress.isLoading}
         title={`${lx.refresh} ${lx.verse}`}
       >
-        <i class="material-icons {isLoading ? 'spinning' : ''}">
+        <i class="material-icons {progress.isLoading ? 'spinning' : ''}">
           refresh
         </i>
       </button>
@@ -151,13 +109,13 @@
 
     <div
       class="verse-display-area"
-      class:active={isVerseVisible && currentVerse}
+      class:active={isVerseVisible && progress.currentVerse}
     >
-      {#if isVerseVisible && currentVerse}
+      {#if isVerseVisible && progress.currentVerse}
         <div class="fade-in">
-          <VerseCard verseData={currentVerse} />
+          <VerseCard verseData={progress.currentVerse} />
         </div>
-      {:else if isLoading}
+      {:else if progress.isLoading}
         <div class="loader-placeholder">
           <div class="skeleton-line"></div>
           <div class="skeleton-line short"></div>
@@ -179,15 +137,15 @@
           class:failed={progress.step === null}
           class:success={progress.step === 4}
         >
-          {#if currentLevel()}
+          {#if progress.currentLevel()}
             {progress.step === 3 ? lx.which_one : lx.which}
-            {lx?.[currentLevel()]}?
+            {lx?.[progress.currentLevel()]}?
           {:else}
             {lx.game_over}
           {/if}
         </label>
         <div class="input-wrapper">
-          {#if currentLevel()}
+          {#if progress.currentLevel()}
           <SelectMultiple
             title={lx.start_typing}
             array={partsList}
@@ -198,7 +156,7 @@
             heightLimit="250px"
             itemBackground="transparent"
           />
-          {:else if currentLevel() === null}
+          {:else if progress.currentLevel() === null}
             <div>
               <span class="selected-part">{selectedPart}</span>
             </div>
@@ -206,7 +164,7 @@
         </div>
       </div>
 
-      {#if isRestartGame && currentLevel() === null}
+      {#if isRestartGame && progress.currentLevel() === null}
         <button
           class="check-button"
           class:failed={progress.step === null}
