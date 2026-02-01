@@ -19,7 +19,7 @@ class GameService {
       const randomChapterNum = Math.floor(
         (Math.random() * (max+1 - min)) + min
       );
-      const { part, book, chapter } = this.findBookAndChapter(
+      const { part, book, canonicalBook, chapter } = this.findBookAndChapter(
         randomChapterNum,
         bibleName
       );
@@ -35,6 +35,7 @@ class GameService {
       return {
         part,
         book,
+        canonicalBook,
         chapter,
         verse,
         verseNum: randomVerseNum,
@@ -42,6 +43,40 @@ class GameService {
       }
     } catch (err) {
       console.error('Error getting random verse:', err);
+      throw err;
+    }
+  }
+
+  getVerse({ book, chapter, verseNum, bibleName = 'RUS_SYNODAL' }) {
+    try {
+      let bible;
+      let internalBookName;
+
+      if (bibleName === 'en') {
+        bible = bible_eng;
+        internalBookName = book;
+      } else {
+        bible = bible_rus;
+        internalBookName = bookNameMap[bibleName][book] || book;
+      }
+
+      if (!bible[internalBookName] || !bible[internalBookName][chapter]) {
+        return null;
+      }
+
+      const verse = bible[internalBookName][chapter][verseNum];
+      const versesCount = Object.keys(bible[internalBookName][chapter]).length;
+
+      return {
+        part: chapter > 929 ? 'christian greek' : 'hebrew-aramic', // Simplified part logic
+        book: internalBookName,
+        chapter,
+        verse,
+        verseNum,
+        versesCount
+      };
+    } catch (err) {
+      console.error('Error getting specific verse:', err);
       throw err;
     }
   }
@@ -78,6 +113,7 @@ class GameService {
         return {
           part,
           book: bookName,
+          canonicalBook: book.name,
           chapter: chapterNum
         };
       }

@@ -18,11 +18,17 @@ class MainController {
   }
   
   async getRandomVerse(req, reply) {
-    reply.send(GameService.getRandomVerse({ bibleName: req.query.bibleName }));
+    const { min, max, bibleName } = req.query;
+    reply.send(GameService.getRandomVerse({ min, max, bibleName }));
   }
 
   async getBookMapping(req, reply) {
     reply.send(GameService.getBookMapping(req.query.bibleName));
+  }
+
+  async getVerse(req, reply) {
+    const { book, chapter, verseNum, bibleName } = req.query;
+    reply.send(GameService.getVerse({ book, chapter, verseNum, bibleName }));
   }
 }
 module.exports = new MainController();

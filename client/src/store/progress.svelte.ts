@@ -23,12 +23,13 @@ function createProgressStore() {
     highScore: 0,
     step: 0 as number | null, // Current step/level in the game
     currentVerse: null as any,
+    canonicalBook: '' as string,
     isLoading: false,
     /* attempt: 1, // Number of attempts/lives made
     maxAttempts: 3, // Maximum attempts/lives allowed */
   });
 
-  const currentLevel = $derived(() => {
+  const currentLevel = $derived.by(() => {
     if (state.step === null || state.step >= state.levels.length) return null;
     return state.levels[state.step]?.name?.toLowerCase();
   });
@@ -77,12 +78,25 @@ function createProgressStore() {
       state.step = 0;
     },
 
-    setParts(parts: { part: string, book: string, chapter: string, verseNum: string } | null) {
+    setParts(parts: {
+      part: string;
+      book: string;
+      chapter: string;
+      verseNum: string;
+      canonicalBook?: string;
+    } | null) {
       if (!parts) return null;
       state.levels[0].value = parts.part;
       state.levels[1].value = parts.book;
       state.levels[2].value = parts.chapter;
       state.levels[3].value = parts.verseNum;
+      
+      if (parts.canonicalBook) {
+        state.canonicalBook = parts.canonicalBook;
+      } else if (settings.language === 'en') {
+        state.canonicalBook = parts.book;
+      }
+      
       return parts;
     },
 
@@ -137,6 +151,29 @@ function createProgressStore() {
         }
       } catch (error) {
         console.error('Error fetching book mapping:', error);
+      } finally {
+        state.isLoading = false;
+      }
+    },
+
+    async fetchVerse(
+      { book, chapter, verseNum }:
+      { book: string, chapter: number, verseNum: number }
+    ) {
+      try {
+        state.isLoading = true;
+        const bibleName = settings.language === 'en' ? 'en' : 'RUS_SYNODAL';
+        const response = await (methods.fetch as any)(
+          `/verse/by?book=${book}&chapter=${chapter}&verseNum=${verseNum}&bibleName=${bibleName}`
+        ).get();
+        
+        if (response?.verse) {
+          response.verse = cleanVerseText(response.verse);
+          // Keep canonical book the same
+          state.currentVerse = actions.setParts({ ...response, canonicalBook: book });
+        }
+      } catch (error) {
+        console.error('Error fetching specific verse:', error);
       } finally {
         state.isLoading = false;
       }

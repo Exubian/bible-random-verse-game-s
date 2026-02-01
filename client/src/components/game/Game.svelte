@@ -3,7 +3,7 @@
   import SelectMultiple from '../ui/SelectMultiple.svelte';
   import Icon from '../ui/Icon.svelte';
   
-  import { getContext } from 'svelte';
+  import { getContext, onMount, untrack } from 'svelte';
   import { methods } from '../../utils/mixin.js';
   import {
     default as bibleStructure,
@@ -63,9 +63,23 @@
     isRestartGame = false;
   }
 
-  $effect(async() => {
+  onMount(async () => {
     await progress.fetchRandomVerse();
-    await progress.fetchBookMapping();
+  });
+
+  $effect(() => {
+    const lang = settings.language;
+    untrack(() => {
+      progress.fetchBookMapping();
+      
+      if (progress.currentVerse && progress.canonicalBook) {
+        progress.fetchVerse({
+          book: progress.canonicalBook,
+          chapter: progress.currentVerse.chapter,
+          verseNum: progress.currentVerse.verseNum
+        });
+      }
+    });
   });
 </script>
 
@@ -137,15 +151,15 @@
           class:failed={progress.step === null}
           class:success={progress.step === 4}
         >
-          {#if progress.currentLevel()}
+          {#if progress.currentLevel}
             {progress.step === 3 ? lx.which_one : lx.which}
-            {lx?.[progress.currentLevel()]}?
+            {lx?.[progress.currentLevel]}?
           {:else}
             {lx.game_over}
           {/if}
         </label>
         <div class="input-wrapper">
-          {#if progress.currentLevel()}
+          {#if progress.currentLevel}
           <SelectMultiple
             title={lx.start_typing}
             array={partsList}
@@ -156,7 +170,7 @@
             heightLimit="250px"
             itemBackground="transparent"
           />
-          {:else if progress.currentLevel() === null}
+          {:else if progress.currentLevel === null}
             <div>
               <span class="selected-part">{selectedPart}</span>
             </div>
@@ -164,7 +178,7 @@
         </div>
       </div>
 
-      {#if isRestartGame && progress.currentLevel() === null}
+      {#if isRestartGame && progress.currentLevel === null}
         <button
           class="check-button"
           class:failed={progress.step === null}
