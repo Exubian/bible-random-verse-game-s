@@ -4,7 +4,11 @@ import path from 'node:path'
 
 // https://vite.dev/config/
 export default defineConfig({
-  plugins: [svelte()],
+  plugins: [svelte({
+    /* compilerOptions: {
+      dev: true,
+    } */
+  })],
   resolve: {
     alias: {
       '@': path.resolve(__dirname, './src'),

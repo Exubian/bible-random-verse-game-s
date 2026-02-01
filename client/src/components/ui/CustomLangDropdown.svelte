@@ -1,5 +1,5 @@
 <script>
-  import { settings, languages, setLanguage } from '../../store/settings.svelte';
+  import { settings, languages } from '../../store/settings.svelte';
 
   let isOpen = $state(false);
 
@@ -23,7 +23,7 @@
    * @param {string} value - The language option to select.
    */
   function selectOption(value) {
-    setLanguage(value);
+    settings.setLanguage(value);
     isOpen = false;
   }
 </script>
