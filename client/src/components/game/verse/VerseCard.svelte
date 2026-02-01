@@ -15,9 +15,9 @@
   {#if verseData}
     <p class="verse-text">"{verseData.verse}"</p>
     <p class="verse-reference">
-      <strong>
+      <!-- <strong>
         {verseData.book} {verseData.chapter}:{verseData.verseNum}
-      </strong>
+      </strong> -->
     </p>
   {/if}
 </div>
